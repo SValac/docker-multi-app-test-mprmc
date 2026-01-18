@@ -1,0 +1,132 @@
+services:
+    # Database Service MySQL
+    mysql: # service name
+        image: mysql:9.5 # MySQL image version 9.5
+        container_name: mysql_container # container name
+        restart: unless-stopped # if the container stops unexpectedly  restart it
+        environment: # environment variables for MySQL configuration
+            MYSQL_ROOT_PASSWORD: root
+            MYSQL_DATABASE: mapremec
+            MYSQL_USER: mapremec_user
+            MYSQL_PASSWORD: mapremec_password
+        ports:
+            - '3307:3306' # map port 3306 of the container to port 3306 on the host
+        volumes:
+            - mysql_data:/var/lib/mysql # persist MySQL data using a named volume
+        networks:
+            - mapremec_network # connect to the custom network
+
+    # Backend service Laravel
+    backend:
+        build:
+            context: ./MAPREMEC_BACK
+            dockerfile: Dockerfile
+        container_name: mapremec_backend
+        restart: unless-stopped
+        working_dir: /var/www
+        volumes:
+            - ./MAPREMEC_BACK:/var/www
+            - backend_vendor:/var/www/vendor
+        ports:
+            - '8000:8000'
+        depends_on:
+            - mysql
+        networks:
+            - mapremec_network
+
+    nuxt-app:
+        build: ./MAPREMEC_FRONT
+        container_name: maprmec-frontend
+        ports:
+            - '3000:3000'
+        env_file:
+            - ./MAPREMEC_FRONT/.env
+        volumes:
+            - /usr/src/app/node_modules
+        networks:
+            - mapremec_network
+        restart: unless-stopped
+        develop:
+            watch:
+                - path: ./MAPREMEC_FRONT/.env
+                  action: rebuild
+
+                - path: ./MAPREMEC_FRONT/
+                  target: /usr/src/app
+                  action: sync
+                  ignore:
+                      - 'node_modules/**'
+                      - '.nuxt/**'
+                      - 'dist/**'
+                      - 'coverage/**'
+                      - '.git/**'
+
+                - path: ./MAPREMEC_FRONT/components
+                  target: /usr/src/app/components
+                  action: sync
+                  ignore:
+                      - '**/*.test.ts'
+                      - '**/*.spec.ts'
+
+                - path: ./MAPREMEC_FRONT/composables
+                  target: /usr/src/app/composables
+                  action: sync
+
+                - path: ./MAPREMEC_FRONT/pages
+                  target: /usr/src/app/pages
+                  action: sync
+
+                - path: ./MAPREMEC_FRONT/layouts
+                  target: /usr/src/app/layouts
+                  action: sync
+
+                - path: ./MAPREMEC_FRONT/plugins
+                  target: /usr/src/app/plugins
+                  action: sync
+
+                - path: ./MAPREMEC_FRONT/middleware
+                  target: /usr/src/app/middleware
+                  action: sync
+
+                - path: ./MAPREMEC_FRONT/assets
+                  target: /usr/src/app/assets
+                  action: sync
+
+                - path: ./MAPREMEC_FRONT/public
+                  target: /usr/src/app/public
+                  action: sync
+
+                - path: ./MAPREMEC_FRONT/server
+                  target: /usr/src/app/server
+                  action: sync
+
+                - path: ./MAPREMEC_FRONT/nuxt.config.ts
+                  action: restart
+
+                - path: ./MAPREMEC_FRONT/tsconfig.json
+                  action: restart
+
+                - path: ./MAPREMEC_FRONT/vitest.config.ts
+                  action: restart
+
+                - path: ./MAPREMEC_FRONT/playwright.config.ts
+                  action: restart
+
+                - path: ./MAPREMEC_FRONT/eslint.config.mjs
+                  action: restart
+
+                - path: ./MAPREMEC_FRONT/package.json
+                  action: rebuild
+
+                - path: ./MAPREMEC_FRONT/package-lock.json
+                  action: rebuild
+
+networks: # global section for defining networks
+    mapremec_network: # custom network
+        driver: bridge # use bridge driver
+
+volumes: # global section for defining volumes
+    mysql_data: # named volume for MySQL data persistence
+        driver: local # use local driver
+    backend_vendor: # named volume for backend vendor directory
+        driver: local # use local driver

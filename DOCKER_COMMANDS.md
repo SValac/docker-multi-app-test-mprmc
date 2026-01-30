@@ -16,6 +16,9 @@ docker-compose up -d
 # Iniciar con rebuild de imágenes
 docker-compose up --build
 
+# Iniciar con rebuild sin caché
+docker compose build --no-cache
+
 # Iniciar con hot reload (sincroniza cambios automáticamente)
 docker-compose watch
 ```
@@ -27,6 +30,15 @@ docker-compose watch
 ```bash
 # Detener todos los contenedores
 docker-compose down
+
+# Detener todos los contenedores (alternativa)
+docker stop $(docker ps -q)
+
+# Eliminar todos los contenedores (detenidos)
+docker rm $(docker ps -a -q)
+
+# Detener y eliminar todas las imágenes
+docker-compose down --rmi all
 
 # Detener y eliminar imágenes locales
 docker-compose down --rmi local
@@ -194,20 +206,20 @@ docker volume ls
 
 ## URLs de acceso
 
-| Servicio | URL |
-|----------|-----|
-| Frontend | http://localhost:3000 |
+| Servicio    | URL                   |
+| ----------- | --------------------- |
+| Frontend    | http://localhost:3000 |
 | Backend API | http://localhost:8000 |
-| MySQL | localhost:3307 |
+| MySQL       | localhost:3307        |
 
 ---
 
 ## Credenciales MySQL
 
-| Campo | Valor |
-|-------|-------|
-| Host | localhost (desde PC) / mysql (desde contenedor) |
-| Puerto | 3307 |
-| Database | mapremec |
-| Usuario | mapremec_user |
-| Password | mapremec_password |
+| Campo    | Valor                                           |
+| -------- | ----------------------------------------------- |
+| Host     | localhost (desde PC) / mysql (desde contenedor) |
+| Puerto   | 3307                                            |
+| Database | mapremec                                        |
+| Usuario  | mapremec_user                                   |
+| Password | mapremec_password                               |
